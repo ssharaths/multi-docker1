@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  -docker build -t ssharaths/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true ssharaths/react-test npm test
+
+after_success:
+  - docker build -t ssharaths/multi-client ./client
+  - docker biild -t ssharaths/multi-nginx ./nginx
+  - docker build -t ssharaths/multi-server ./server
+  - docker build -t ssharaths/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push ssharaths/multi-client
+  - docker push ssharaths/multi-nginx
+  - docker push ssharaths/multi-server
+  - docker push ssharaths/multi-worker
